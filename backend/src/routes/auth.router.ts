@@ -5,6 +5,26 @@ import { requireRole } from '../middleware/requireRole';
 
 const router = Router();
 
+router.post('/signup', async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: { code: 'MISSING_FIELDS', message: 'email and password are required.' } });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: { code: 'WEAK_PASSWORD', message: 'Password must be at least 8 characters.' } });
+  }
+  try {
+    const user = await registerOwner(email, password);
+    return res.status(201).json(user);
+  } catch (err: unknown) {
+    const e = err as { code?: string; statusCode?: number; message?: string };
+    if (e.statusCode === 409) {
+      return res.status(409).json({ error: { code: 'EMAIL_EXISTS', message: 'An account with this email already exists.' } });
+    }
+    return res.status(500).json({ error: { code: 'SERVER_ERROR', message: 'An unexpected error occurred.' } });
+  }
+});
+
 router.post('/login', async (req: Request, res: Response) => {
   const { email, password } = req.body;
 

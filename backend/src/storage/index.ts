@@ -1,15 +1,39 @@
-/**
- * Storage abstraction module.
- * Selects between S3 and Cloudinary providers based on the STORAGE_TYPE env var.
- */
+import { v2 as cloudinary } from 'cloudinary';
 
 export interface StorageProvider {
   upload(buffer: Buffer, filename: string, mimeType: string): Promise<string>;
 }
 
-// ---------------------------------------------------------------------------
-// S3 stub — returns a URL in the standard S3 path-style format
-// ---------------------------------------------------------------------------
+class CloudinaryProvider implements StorageProvider {
+  constructor() {
+    // CLOUDINARY_URL format: cloudinary://api_key:api_secret@cloud_name
+    const url = process.env.CLOUDINARY_URL ?? '';
+    const match = url.match(/cloudinary:\/\/(\d+):([^@]+)@(.+)/);
+    if (match) {
+      cloudinary.config({
+        api_key: match[1],
+        api_secret: match[2],
+        cloud_name: match[3],
+      });
+    }
+  }
+
+  async upload(buffer: Buffer, filename: string, mimeType: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const folder = 'digital-menu';
+      const publicId = `${folder}/${filename.replace(/\.[^.]+$/, '')}`;
+
+      cloudinary.uploader.upload_stream(
+        { public_id: publicId, resource_type: 'image', format: mimeType.split('/')[1] },
+        (error, result) => {
+          if (error || !result) return reject(error ?? new Error('Upload failed'));
+          resolve(result.secure_url);
+        }
+      ).end(buffer);
+    });
+  }
+}
+
 class S3Provider implements StorageProvider {
   private bucket: string;
   private region: string;
@@ -24,34 +48,8 @@ class S3Provider implements StorageProvider {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Cloudinary stub — parses the cloud name from CLOUDINARY_URL and returns
-// a URL in the standard Cloudinary delivery format
-// ---------------------------------------------------------------------------
-class CloudinaryProvider implements StorageProvider {
-  private cloudName: string;
-
-  constructor() {
-    // CLOUDINARY_URL format: cloudinary://api_key:api_secret@cloud_name
-    const url = process.env.CLOUDINARY_URL ?? '';
-    const match = url.match(/@([^/]+)$/);
-    this.cloudName = match ? match[1] : 'my-cloud';
-  }
-
-  async upload(_buffer: Buffer, filename: string, _mimeType: string): Promise<string> {
-    return `https://res.cloudinary.com/${this.cloudName}/image/upload/${filename}`;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Factory
-// ---------------------------------------------------------------------------
 export function getStorageProvider(): StorageProvider {
   const storageType = (process.env.STORAGE_TYPE ?? 's3').toLowerCase();
-
-  if (storageType === 'cloudinary') {
-    return new CloudinaryProvider();
-  }
-
+  if (storageType === 'cloudinary') return new CloudinaryProvider();
   return new S3Provider();
 }

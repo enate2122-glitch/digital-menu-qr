@@ -74,6 +74,10 @@ export default function LoginPage() {
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
+        <p style={s.footer}>
+          Don't have an account?{' '}
+          <a href="/signup" style={{ color: '#2563eb', fontWeight: 600 }}>Sign up free</a>
+        </p>
       </div>
     </div>
   );
@@ -163,5 +167,11 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     marginTop: '4px',
     transition: 'background-color 0.2s',
+  },
+  footer: {
+    textAlign: 'center' as const,
+    marginTop: '20px',
+    fontSize: '0.875rem',
+    color: '#64748b',
   },
 };
