@@ -74,7 +74,7 @@ export default function LoginPage() {
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
-        <p style={s.footer}>
+        <p style={styles.footer}>
           Don't have an account?{' '}
           <a href="/signup" style={{ color: '#2563eb', fontWeight: 600 }}>Sign up free</a>
         </p>
