@@ -1,14 +1,16 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 
-const HomePage      = lazy(() => import('./pages/HomePage'));
-const FeaturesPage  = lazy(() => import('./pages/FeaturesPage'));
-const FAQPage       = lazy(() => import('./pages/FAQPage'));
-const BlogPage      = lazy(() => import('./pages/BlogPage'));
-const ContactPage   = lazy(() => import('./pages/ContactPage'));
-const LoginPage     = lazy(() => import('./pages/LoginPage'));
-const SignupPage    = lazy(() => import('./pages/SignupPage'));
-const AdminLayout   = lazy(() => import('./pages/AdminLayout'));
+const HomePage       = lazy(() => import('./pages/HomePage'));
+const FeaturesPage   = lazy(() => import('./pages/FeaturesPage'));
+const FAQPage        = lazy(() => import('./pages/FAQPage'));
+const BlogPage       = lazy(() => import('./pages/BlogPage'));
+const ContactPage    = lazy(() => import('./pages/ContactPage'));
+const LoginPage      = lazy(() => import('./pages/LoginPage'));
+const SignupPage     = lazy(() => import('./pages/SignupPage'));
+const PricingPage    = lazy(() => import('./pages/PricingPage'));
+const PendingPage    = lazy(() => import('./pages/PendingPage'));
+const AdminLayout    = lazy(() => import('./pages/AdminLayout'));
 const PublicMenuPage = lazy(() => import('./pages/PublicMenuPage'));
 
 function Loader() {
@@ -32,6 +34,8 @@ export default function App() {
           <Route path="/contact"     element={<ContactPage />} />
           <Route path="/login"       element={<LoginPage />} />
           <Route path="/signup"      element={<SignupPage />} />
+          <Route path="/pricing"     element={<PricingPage />} />
+          <Route path="/pending"     element={<PendingPage />} />
           <Route path="/admin/*"     element={<AdminLayout />} />
           <Route path="/menu/:uniqueQrId" element={<PublicMenuPage />} />
         </Routes>

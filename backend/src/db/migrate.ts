@@ -49,6 +49,17 @@ const migrations: string[] = [
     revoked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     expires_at TIMESTAMPTZ NOT NULL
   )`,
+
+  `CREATE TABLE IF NOT EXISTS subscriptions (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    plan        TEXT NOT NULL CHECK (plan IN ('professional', 'growing', 'enterprise')),
+    status      TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected', 'cancelled')),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    approved_at TIMESTAMPTZ,
+    approved_by UUID REFERENCES users(id),
+    notes       TEXT
+  )`,
 ];
 
 async function migrate(): Promise<void> {

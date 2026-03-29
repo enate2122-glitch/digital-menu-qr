@@ -7,21 +7,18 @@ import itemRouter from './routes/item.router';
 import imageRouter from './routes/image.router';
 import qrRouter from './routes/qr.router';
 import publicMenuRouter from './routes/publicMenu.router';
+import subscriptionRouter from './routes/subscription.router';
 
 export function createApp(): Application {
   const app = express();
-
-  // Middleware
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Health check
   app.get('/health', (_req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // Routes
   app.use('/api/auth', authRouter);
   app.use('/api/restaurants', restaurantRouter);
   app.use('/api/categories', categoryRouter);
@@ -29,6 +26,7 @@ export function createApp(): Application {
   app.use('/api/images', imageRouter);
   app.use('/api/restaurant', qrRouter);
   app.use('/api/public', publicMenuRouter);
+  app.use('/api/subscriptions', subscriptionRouter);
 
   return app;
 }

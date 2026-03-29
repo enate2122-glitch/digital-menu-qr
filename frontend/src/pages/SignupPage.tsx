@@ -21,7 +21,7 @@ export default function SignupPage() {
       const res = await client.post<{ token: string; role: string }>('/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role);
-      navigate('/admin');
+      navigate('/pricing');
     } catch (err: unknown) {
       setError((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message || 'Failed to create account.');
     } finally {

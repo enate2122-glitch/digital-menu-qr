@@ -4,6 +4,8 @@ import RestaurantPage from './RestaurantPage';
 import CategoriesPage from './CategoriesPage';
 import ItemsPage from './ItemsPage';
 
+import SubscriptionsPage from './SubscriptionsPage';
+
 function getRole() { return localStorage.getItem('role') ?? ''; }
 
 export default function AdminLayout() {
@@ -18,7 +20,10 @@ export default function AdminLayout() {
   }
 
   const navLinks = role === 'super_admin'
-    ? [{ to: '/admin/users', label: '👥 Users' }]
+    ? [
+        { to: '/admin/users', label: '👥 Users' },
+        { to: '/admin/subscriptions', label: '💳 Subscriptions' },
+      ]
     : [
         { to: '/admin/restaurant', label: '🏪 Restaurant' },
         { to: '/admin/categories', label: '🗂️ Categories' },
@@ -57,6 +62,7 @@ export default function AdminLayout() {
             </div>
           } />
           {role === 'super_admin' && <Route path="users" element={<UsersPage />} />}
+          {role === 'super_admin' && <Route path="subscriptions" element={<SubscriptionsPage />} />}
           {role === 'owner' && <Route path="restaurant" element={<RestaurantPage />} />}
           {role === 'owner' && <Route path="categories" element={<CategoriesPage />} />}
           {role === 'owner' && <Route path="items" element={<ItemsPage />} />}

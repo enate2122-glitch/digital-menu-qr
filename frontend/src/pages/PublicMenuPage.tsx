@@ -136,13 +136,6 @@ export default function PublicMenuPage() {
                   <span style={s.soldOutText}>SOLD OUT</span>
                 </div>
               )}
-              {/* Badge — first item in category gets "Best Seller", every 3rd gets "Chef's Choice" */}
-              {item.is_available && (() => {
-                const idx = activeItems.indexOf(item);
-                if (idx % 5 === 0) return <span style={{ ...s.badge, background: accent, color: '#1a1a2e' }}>Best Seller</span>;
-                if (idx % 5 === 2) return <span style={{ ...s.badge, background: '#2a2a4a', color: accent, border: `1px solid ${accent}` }}>Chef's Choice</span>;
-                return null;
-              })()}
             </div>
 
             <div style={s.cardBody}>
