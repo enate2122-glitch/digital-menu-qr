@@ -4,89 +4,56 @@ import RestaurantPage from './RestaurantPage';
 import CategoriesPage from './CategoriesPage';
 import ItemsPage from './ItemsPage';
 
-function getRole(): string {
-  return localStorage.getItem('role') ?? '';
-}
+function getRole() { return localStorage.getItem('role') ?? ''; }
 
 export default function AdminLayout() {
   const role = getRole();
   const navigate = useNavigate();
-  const location = useLocation();
+  const { pathname } = useLocation();
 
-  function handleLogout() {
+  function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     navigate('/login');
   }
 
-  const navLinks =
-    role === 'super_admin'
-      ? [{ to: '/admin/users', label: 'Users' }]
-      : [
-          { to: '/admin/restaurant', label: 'Restaurant' },
-          { to: '/admin/categories', label: 'Categories' },
-          { to: '/admin/items', label: 'Menu Items' },
-        ];
+  const navLinks = role === 'super_admin'
+    ? [{ to: '/admin/users', label: '👥 Users' }]
+    : [
+        { to: '/admin/restaurant', label: '🏪 Restaurant' },
+        { to: '/admin/categories', label: '🗂️ Categories' },
+        { to: '/admin/items', label: '🍽️ Menu Items' },
+      ];
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top nav */}
-      <nav style={{
-        background: '#1e293b',
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 24px',
-        height: '56px',
-        gap: '8px',
-        flexShrink: 0,
-      }}>
-        <span style={{ fontWeight: 700, fontSize: '1rem', marginRight: '16px', color: '#f8fafc' }}>🍽️ Digital Menu</span>
-
-        {navLinks.map(({ to, label }) => {
-          const active = location.pathname.startsWith(to);
-          return (
-            <Link
-              key={to}
-              to={to}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                color: active ? '#fff' : '#94a3b8',
-                background: active ? '#2563eb' : 'transparent',
-                transition: 'all 0.15s',
-              }}
-            >
-              {label}
-            </Link>
-          );
-        })}
-
-        <button
-          onClick={handleLogout}
-          style={{
-            marginLeft: 'auto',
-            background: 'transparent',
-            color: '#94a3b8',
-            border: '1px solid #334155',
-            padding: '5px 14px',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-          }}
-        >
-          Logout
-        </button>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+      <nav style={n.bar}>
+        <div style={n.inner}>
+          <Link to="/" style={n.logo}>🍽️ <span style={{ color: 'var(--gold)' }}>Menu</span>QR</Link>
+          <div style={n.divider} />
+          <div style={n.links}>
+            {navLinks.map(({ to, label }) => {
+              const active = pathname.startsWith(to);
+              return (
+                <Link key={to} to={to} style={{ ...n.link, ...(active ? n.active : {}) }}>
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+          <button onClick={logout} className="btn-ghost" style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: '0.8rem' }}>
+            Logout
+          </button>
+        </div>
       </nav>
 
-      {/* Page content */}
       <div style={{ flex: 1 }}>
         <Routes>
           <Route index element={
-            <div className="page-content">
-              <p style={{ color: '#6b7280' }}>Welcome — select a section from the nav above.</p>
+            <div className="page-content" style={{ textAlign: 'center', paddingTop: '80px' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🍽️</div>
+              <h2 style={{ color: 'var(--gold)', fontFamily: 'var(--font-ser)', marginBottom: '8px' }}>Welcome to MenuQR</h2>
+              <p style={{ color: 'var(--muted)' }}>Select a section from the navigation above.</p>
             </div>
           } />
           {role === 'super_admin' && <Route path="users" element={<UsersPage />} />}
@@ -98,3 +65,13 @@ export default function AdminLayout() {
     </div>
   );
 }
+
+const n: Record<string, React.CSSProperties> = {
+  bar: { background: 'var(--bg2)', borderBottom: '1px solid var(--border)', padding: '0 24px', position: 'sticky', top: 0, zIndex: 100 },
+  inner: { maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', height: '60px', gap: '8px' },
+  logo: { fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)', flexShrink: 0 },
+  divider: { width: '1px', height: '24px', background: 'var(--border)', margin: '0 8px', flexShrink: 0 },
+  links: { display: 'flex', gap: '2px' },
+  link: { padding: '6px 14px', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--muted)', fontWeight: 500, transition: 'all 0.15s' },
+  active: { color: 'var(--gold)', background: 'var(--gold-dim)' },
+};
