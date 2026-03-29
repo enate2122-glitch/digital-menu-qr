@@ -47,17 +47,17 @@ export default function SignupPage() {
 
           <div style={s.field}>
             <label style={s.label}>Email Address</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@restaurant.com" style={s.input} />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@restaurant.com" autoComplete="email" style={s.input} />
           </div>
 
           <div style={s.field}>
             <label style={s.label}>Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters" style={s.input} />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters" autoComplete="new-password" style={s.input} />
           </div>
 
           <div style={s.field}>
             <label style={s.label}>Confirm Password</label>
-            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" style={s.input} />
+            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" autoComplete="new-password" style={s.input} />
           </div>
 
           <button type="submit" disabled={loading} style={s.btn}>
