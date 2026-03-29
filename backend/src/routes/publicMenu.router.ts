@@ -60,6 +60,8 @@ router.get('/menu/:unique_qr_id', rateLimiter, async (req: Request, res: Respons
       });
     }
 
+    // Cache public menu for 30 seconds on CDN/browser
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
     return res.json(result);
   } catch (err) {
     return res.status(500).json({
