@@ -6,25 +6,14 @@ export interface StorageProvider {
 
 class CloudinaryProvider implements StorageProvider {
   constructor() {
-    // CLOUDINARY_URL format: cloudinary://api_key:api_secret@cloud_name
-    const url = process.env.CLOUDINARY_URL ?? '';
-    const match = url.match(/cloudinary:\/\/(\d+):([^@]+)@(.+)/);
-    if (match) {
-      cloudinary.config({
-        api_key: match[1],
-        api_secret: match[2],
-        cloud_name: match[3],
-      });
-    }
+    // Cloudinary SDK auto-reads CLOUDINARY_URL from environment
+    cloudinary.config({ secure: true });
   }
 
-  async upload(buffer: Buffer, filename: string, mimeType: string): Promise<string> {
+  async upload(buffer: Buffer, _filename: string, _mimeType: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const folder = 'digital-menu';
-      const publicId = `${folder}/${filename.replace(/\.[^.]+$/, '')}`;
-
       cloudinary.uploader.upload_stream(
-        { public_id: publicId, resource_type: 'image', format: mimeType.split('/')[1] },
+        { folder: 'digital-menu', resource_type: 'image' },
         (error, result) => {
           if (error || !result) return reject(error ?? new Error('Upload failed'));
           resolve(result.secure_url);
