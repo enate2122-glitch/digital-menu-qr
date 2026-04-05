@@ -21,7 +21,8 @@ router.post('/signup', async (req: Request, res: Response) => {
     if (e.statusCode === 409) {
       return res.status(409).json({ error: { code: 'EMAIL_EXISTS', message: 'An account with this email already exists.' } });
     }
-    return res.status(500).json({ error: { code: 'SERVER_ERROR', message: 'An unexpected error occurred.' } });
+    console.error('[signup error]', err);
+    return res.status(500).json({ error: { code: 'SERVER_ERROR', message: e.message ?? 'An unexpected error occurred.' } });
   }
 });
 

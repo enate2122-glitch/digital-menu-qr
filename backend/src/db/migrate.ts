@@ -20,6 +20,7 @@ const migrations: string[] = [
     primary_color TEXT,
     slug          TEXT UNIQUE NOT NULL,
     unique_qr_id  TEXT UNIQUE NOT NULL DEFAULT gen_random_uuid(),
+    menu_theme    TEXT NOT NULL DEFAULT 'dark',
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
 
@@ -49,6 +50,8 @@ const migrations: string[] = [
     revoked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     expires_at TIMESTAMPTZ NOT NULL
   )`,
+
+  `ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS menu_theme TEXT NOT NULL DEFAULT 'dark'`,
 
   `CREATE TABLE IF NOT EXISTS subscriptions (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),

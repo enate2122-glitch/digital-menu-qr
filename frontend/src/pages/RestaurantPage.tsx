@@ -15,6 +15,7 @@ export default function RestaurantPage() {
   const [address, setAddress] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#c9a84c');
   const [logoUrl, setLogoUrl] = useState('');
+  const [menuTheme, setMenuTheme] = useState('dark');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -36,6 +37,7 @@ export default function RestaurantPage() {
           setAddress(r.address ?? '');
           setPrimaryColor(r.primary_color ?? '#c9a84c');
           setLogoUrl(r.logo_url ?? '');
+          setMenuTheme((r as { menu_theme?: string }).menu_theme ?? 'dark');
         }
       } catch { setError('Failed to load restaurant profile.'); }
       finally { setLoading(false); }
@@ -62,7 +64,7 @@ export default function RestaurantPage() {
     setSaveError(''); setSaveSuccess(''); setSaving(true);
     try {
       if (restaurant) {
-        const res = await client.patch<Restaurant>(`/restaurants/${restaurant.id}`, { name, address, primary_color: primaryColor, logo_url: logoUrl });
+        const res = await client.patch<Restaurant>(`/restaurants/${restaurant.id}`, { name, address, primary_color: primaryColor, logo_url: logoUrl, menu_theme: menuTheme });
         setRestaurant(res.data);
         setSaveSuccess('Changes saved successfully.');
       } else {
@@ -149,6 +151,28 @@ export default function RestaurantPage() {
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: primaryColor, border: '1px solid var(--border)', flexShrink: 0 }} />
                   {(['#c9a84c', '#2563eb', '#16a34a', '#dc2626', '#7c3aed', '#0891b2'] as string[]).map(c => (
                     <button key={c} type="button" onClick={() => setPrimaryColor(c)} style={{ width: '28px', height: '28px', borderRadius: '50%', background: c, border: 'none', cursor: 'pointer', outline: primaryColor === c ? `3px solid ${c}` : 'none', outlineOffset: '2px', flexShrink: 0 }} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label>Menu Design Theme</label>
+                <p style={{ color: 'var(--muted)', fontSize: '0.78rem', margin: '0 0 10px' }}>Choose how your public menu looks to customers.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {[
+                    { id: 'dark',    label: 'Dark Fine Dining', desc: 'Gold on dark, elegant', preview: ['#0d0d1a','#c9a84c','#13132a'] },
+                    { id: 'light',   label: 'Light & Clean',    desc: 'White, modern, minimal', preview: ['#fafafa','#e85d26','#fff'] },
+                    { id: 'elegant', label: 'Elegant Classic',  desc: 'Cream, serif, luxury', preview: ['#fdf8f0','#8b6914','#fff'] },
+                    { id: 'bold',    label: 'Bold Street Food', desc: 'Dark, vibrant, energetic', preview: ['#111','#ff3d00','#1a1a1a'] },
+                  ].map(t => (
+                    <button key={t.id} type="button" onClick={() => setMenuTheme(t.id)}
+                      style={{ padding: '12px', borderRadius: '10px', border: `2px solid ${menuTheme === t.id ? 'var(--gold)' : 'var(--border)'}`, background: menuTheme === t.id ? 'var(--gold-dim)' : 'var(--bg3)', cursor: 'pointer', textAlign: 'left' as const, transition: 'all 0.15s' }}>
+                      <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                        {t.preview.map((c, i) => <div key={i} style={{ width: '16px', height: '16px', borderRadius: '3px', background: c, border: '1px solid rgba(255,255,255,0.1)' }} />)}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: menuTheme === t.id ? 'var(--gold)' : 'var(--text)' }}>{t.label}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '2px' }}>{t.desc}</div>
+                    </button>
                   ))}
                 </div>
               </div>

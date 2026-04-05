@@ -10,6 +10,7 @@ export interface RestaurantRecord {
   primary_color: string | null;
   slug: string;
   unique_qr_id: string;
+  menu_theme: string;
   created_at: Date;
 }
 
@@ -18,6 +19,7 @@ export interface CreateRestaurantData {
   address?: string;
   logo_url?: string;
   primary_color?: string;
+  menu_theme?: string;
 }
 
 export async function createRestaurant(
@@ -32,10 +34,10 @@ export async function createRestaurant(
   const unique_qr_id = uuidv4();
 
   const result = await query<RestaurantRecord>(
-    'INSERT INTO restaurants (owner_id, name, address, logo_url, primary_color, slug, unique_qr_id) ' +
-    'VALUES ($1, $2, $3, $4, $5, $6, $7) ' +
-    'RETURNING id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, created_at',
-    [ownerId, data.name, data.address ?? null, data.logo_url ?? null, data.primary_color ?? null, slug, unique_qr_id]
+    'INSERT INTO restaurants (owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme) ' +
+    'VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ' +
+    'RETURNING id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, created_at',
+    [ownerId, data.name, data.address ?? null, data.logo_url ?? null, data.primary_color ?? null, slug, unique_qr_id, data.menu_theme ?? 'dark']
   );
 
   return result.rows[0];
@@ -43,7 +45,7 @@ export async function createRestaurant(
 
 export async function listRestaurants(ownerId: string): Promise<RestaurantRecord[]> {
   const result = await query<RestaurantRecord>(
-    'SELECT id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, created_at ' +
+    'SELECT id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, created_at ' +
     'FROM restaurants WHERE owner_id = $1 ORDER BY created_at ASC',
     [ownerId]
   );
@@ -102,7 +104,7 @@ export async function updateRestaurant(
     throw err;
   }
 
-  const allowedFields: Array<keyof CreateRestaurantData> = ['name', 'address', 'logo_url', 'primary_color'];
+  const allowedFields: Array<keyof CreateRestaurantData> = ['name', 'address', 'logo_url', 'primary_color', 'menu_theme'];
   const setClauses: string[] = [];
   const values: unknown[] = [];
 

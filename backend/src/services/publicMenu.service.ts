@@ -21,6 +21,8 @@ interface PublicMenuResult {
     name: string;
     logo_url: string | null;
     primary_color: string | null;
+    address: string | null;
+    menu_theme: string;
   };
   categories: Category[];
 }
@@ -28,12 +30,10 @@ interface PublicMenuResult {
 export async function getPublicMenu(uniqueQrId: string): Promise<PublicMenuResult | null> {
   // Fetch restaurant by unique_qr_id
   const restaurantResult = await query<{
-    id: string;
-    name: string;
-    logo_url: string | null;
-    primary_color: string | null;
+    id: string; name: string; logo_url: string | null;
+    primary_color: string | null; address: string | null; menu_theme: string;
   }>(
-    'SELECT id, name, logo_url, primary_color FROM restaurants WHERE unique_qr_id = $1',
+    'SELECT id, name, logo_url, primary_color, address, menu_theme FROM restaurants WHERE unique_qr_id = $1',
     [uniqueQrId]
   );
 
@@ -103,6 +103,8 @@ export async function getPublicMenu(uniqueQrId: string): Promise<PublicMenuResul
       name: restaurant.name,
       logo_url: restaurant.logo_url,
       primary_color: restaurant.primary_color,
+      address: restaurant.address,
+      menu_theme: restaurant.menu_theme ?? 'dark',
     },
     categories,
   };
