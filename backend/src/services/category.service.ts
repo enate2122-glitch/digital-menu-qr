@@ -1,4 +1,6 @@
 import { query } from '../db';
+import { getActivePlan } from './subscription.service';
+import { getLimits } from '../utils/planLimits';
 
 export interface CategoryRecord {
   id: string;
@@ -30,6 +32,24 @@ export async function createCategory(
     err.status = 403;
     err.code = 'FORBIDDEN';
     throw err;
+  }
+
+  // Enforce plan category limit
+  const plan = await getActivePlan(ownerId);
+  if (!plan) {
+    const err: any = new Error('No active subscription. Please subscribe to a plan.');
+    err.status = 403; err.code = 'NO_SUBSCRIPTION'; throw err;
+  }
+  const limits = getLimits(plan);
+  if (limits.maxCategories !== -1) {
+    const countRes = await query<{ count: string }>(
+      'SELECT COUNT(*) as count FROM categories WHERE restaurant_id = $1',
+      [data.restaurant_id]
+    );
+    if (Number(countRes.rows[0].count) >= limits.maxCategories) {
+      const err: any = new Error(`Your ${plan} plan allows up to ${limits.maxCategories} categories. Upgrade to add more.`);
+      err.status = 403; err.code = 'PLAN_LIMIT'; throw err;
+    }
   }
 
   try {

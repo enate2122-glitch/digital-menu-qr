@@ -1,4 +1,6 @@
 import { query } from '../db';
+import { getActivePlan } from './subscription.service';
+import { getLimits } from '../utils/planLimits';
 
 export interface MenuItemRecord {
   id: string;
@@ -78,6 +80,27 @@ export async function createMenuItem(
   }
 
   await verifyCategoryOwnership(data.category_id, ownerId);
+
+  // Enforce plan item limit
+  const plan = await getActivePlan(ownerId);
+  if (!plan) {
+    const err: any = new Error('No active subscription. Please subscribe to a plan.');
+    err.status = 403; err.code = 'NO_SUBSCRIPTION'; throw err;
+  }
+  const limits = getLimits(plan);
+  if (limits.maxItems !== -1) {
+    const countRes = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM menu_items mi
+       JOIN categories c ON c.id = mi.category_id
+       JOIN restaurants r ON r.id = c.restaurant_id
+       WHERE r.owner_id = $1`,
+      [ownerId]
+    );
+    if (Number(countRes.rows[0].count) >= limits.maxItems) {
+      const err: any = new Error(`Your ${plan} plan allows up to ${limits.maxItems} menu items. Upgrade to add more.`);
+      err.status = 403; err.code = 'PLAN_LIMIT'; throw err;
+    }
+  }
 
   const result = await query<MenuItemRecord>(
     `INSERT INTO menu_items (category_id, name, description, price, image_url, is_available, display_order)

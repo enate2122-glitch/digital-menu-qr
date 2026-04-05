@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../db';
+import { getActivePlan } from './subscription.service';
+import { getLimits } from '../utils/planLimits';
 
 export interface RestaurantRecord {
   id: string;
@@ -11,6 +13,8 @@ export interface RestaurantRecord {
   slug: string;
   unique_qr_id: string;
   menu_theme: string;
+  phone: string | null;
+  cover_image_url: string | null;
   created_at: Date;
 }
 
@@ -20,12 +24,31 @@ export interface CreateRestaurantData {
   logo_url?: string;
   primary_color?: string;
   menu_theme?: string;
+  phone?: string;
+  cover_image_url?: string;
 }
 
 export async function createRestaurant(
   ownerId: string,
   data: CreateRestaurantData
 ): Promise<RestaurantRecord> {
+  // Enforce subscription + restaurant limit
+  const plan = await getActivePlan(ownerId);
+  if (!plan) {
+    const err: any = new Error('No active subscription. Please subscribe to a plan.');
+    err.status = 403; err.code = 'NO_SUBSCRIPTION'; throw err;
+  }
+  const limits = getLimits(plan);
+  if (limits.maxRestaurants !== -1) {
+    const countRes = await query<{ count: string }>(
+      'SELECT COUNT(*) as count FROM restaurants WHERE owner_id = $1', [ownerId]
+    );
+    if (Number(countRes.rows[0].count) >= limits.maxRestaurants) {
+      const err: any = new Error(`Your ${plan} plan allows up to ${limits.maxRestaurants} restaurant(s). Upgrade to add more.`);
+      err.status = 403; err.code = 'PLAN_LIMIT'; throw err;
+    }
+  }
+
   const slugBase = data.name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -36,7 +59,7 @@ export async function createRestaurant(
   const result = await query<RestaurantRecord>(
     'INSERT INTO restaurants (owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme) ' +
     'VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ' +
-    'RETURNING id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, created_at',
+    'RETURNING id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, phone, cover_image_url, created_at',
     [ownerId, data.name, data.address ?? null, data.logo_url ?? null, data.primary_color ?? null, slug, unique_qr_id, data.menu_theme ?? 'dark']
   );
 
@@ -45,7 +68,7 @@ export async function createRestaurant(
 
 export async function listRestaurants(ownerId: string): Promise<RestaurantRecord[]> {
   const result = await query<RestaurantRecord>(
-    'SELECT id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, created_at ' +
+    'SELECT id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, phone, cover_image_url, created_at ' +
     'FROM restaurants WHERE owner_id = $1 ORDER BY created_at ASC',
     [ownerId]
   );
@@ -104,7 +127,7 @@ export async function updateRestaurant(
     throw err;
   }
 
-  const allowedFields: Array<keyof CreateRestaurantData> = ['name', 'address', 'logo_url', 'primary_color', 'menu_theme'];
+  const allowedFields: Array<keyof CreateRestaurantData> = ['name', 'address', 'logo_url', 'primary_color', 'menu_theme', 'phone', 'cover_image_url'];
   const setClauses: string[] = [];
   const values: unknown[] = [];
 

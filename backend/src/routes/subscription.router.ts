@@ -31,6 +31,19 @@ router.get('/me', authenticate, requireRole('owner'), async (req: Request, res: 
   }
 });
 
+// Owner: get my plan limits
+router.get('/me/limits', authenticate, requireRole('owner'), async (req: Request, res: Response) => {
+  try {
+    const sub = await getMySubscription(req.user!.id);
+    const activeSub = sub?.status === 'active' ? sub : null;
+    const { getLimits } = await import('../utils/planLimits');
+    const limits = activeSub ? getLimits(activeSub.plan) : null;
+    return res.json({ subscription: activeSub, limits });
+  } catch {
+    return res.status(500).json({ error: { code: 'SERVER_ERROR', message: 'An unexpected error occurred.' } });
+  }
+});
+
 // Super admin: list all subscriptions
 router.get('/', authenticate, requireRole('super_admin'), async (_req: Request, res: Response) => {
   try {

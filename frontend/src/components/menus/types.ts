@@ -11,6 +11,8 @@ export interface MenuData {
     name: string; logo_url: string | null;
     primary_color: string | null; address?: string | null;
     menu_theme: string;
+    phone?: string | null;
+    cover_image_url?: string | null;
   };
   categories: Category[];
 }

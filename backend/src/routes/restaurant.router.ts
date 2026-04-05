@@ -53,8 +53,8 @@ router.get('/:id', authenticate, requireRole('owner'), async (req: Request, res:
 
 router.patch('/:id', authenticate, requireRole('owner'), async (req: Request, res: Response) => {
   try {
-    const { name, address, logo_url, primary_color } = req.body;
-    const restaurant = await updateRestaurant(req.params.id, req.user!.id, { name, address, logo_url, primary_color });
+    const { name, address, logo_url, primary_color, menu_theme, phone, cover_image_url } = req.body;
+    const restaurant = await updateRestaurant(req.params.id, req.user!.id, { name, address, logo_url, primary_color, menu_theme, phone, cover_image_url });
     return res.status(200).json(restaurant);
   } catch (err: any) {
     if (err.status === 404) {

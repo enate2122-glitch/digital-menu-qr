@@ -1,17 +1,40 @@
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import UsersPage from './UsersPage';
 import RestaurantPage from './RestaurantPage';
 import CategoriesPage from './CategoriesPage';
 import ItemsPage from './ItemsPage';
-
 import SubscriptionsPage from './SubscriptionsPage';
+import client from '../api/client';
 
 function getRole() { return localStorage.getItem('role') ?? ''; }
+
+export interface PlanLimits {
+  maxRestaurants: number;
+  maxCategories: number;
+  maxItems: number;
+  imageUploads: boolean;
+  coverImage: boolean;
+}
+
+export interface SubInfo {
+  plan: string;
+  status: string;
+}
 
 export default function AdminLayout() {
   const role = getRole();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [subInfo, setSubInfo] = useState<SubInfo | null>(null);
+  const [limits, setLimits] = useState<PlanLimits | null>(null);
+
+  useEffect(() => {
+    if (role !== 'owner') return;
+    client.get<{ subscription: SubInfo | null; limits: PlanLimits | null }>('/subscriptions/me/limits')
+      .then(res => { setSubInfo(res.data.subscription); setLimits(res.data.limits); })
+      .catch(() => {});
+  }, [role]);
 
   function logout() {
     localStorage.removeItem('token');
@@ -30,6 +53,10 @@ export default function AdminLayout() {
         { to: '/admin/items', label: '🍽️ Menu Items' },
       ];
 
+  const planLabel: Record<string, string> = {
+    professional: 'Professional', growing: 'Growing', enterprise: 'Enterprise',
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
       <nav style={n.bar}>
@@ -46,11 +73,23 @@ export default function AdminLayout() {
               );
             })}
           </div>
+          {role === 'owner' && subInfo && (
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', background: 'var(--gold-dim)', padding: '4px 10px', borderRadius: '20px', marginLeft: '8px', flexShrink: 0 }}>
+              {planLabel[subInfo.plan] ?? subInfo.plan}
+            </span>
+          )}
           <button onClick={logout} className="btn-ghost" style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: '0.8rem' }}>
             Logout
           </button>
         </div>
       </nav>
+
+      {/* No active subscription banner */}
+      {role === 'owner' && !limits && subInfo === null && (
+        <div style={{ background: '#1a1200', borderBottom: '1px solid #c9a84c44', padding: '10px 24px', textAlign: 'center', fontSize: '0.875rem', color: '#c9a84c' }}>
+          You don't have an active subscription. <Link to="/pricing" style={{ color: 'var(--gold)', fontWeight: 700, textDecoration: 'underline' }}>Choose a plan →</Link>
+        </div>
+      )}
 
       <div style={{ flex: 1 }}>
         <Routes>
@@ -63,9 +102,9 @@ export default function AdminLayout() {
           } />
           {role === 'super_admin' && <Route path="users" element={<UsersPage />} />}
           {role === 'super_admin' && <Route path="subscriptions" element={<SubscriptionsPage />} />}
-          {role === 'owner' && <Route path="restaurant" element={<RestaurantPage />} />}
-          {role === 'owner' && <Route path="categories" element={<CategoriesPage />} />}
-          {role === 'owner' && <Route path="items" element={<ItemsPage />} />}
+          {role === 'owner' && <Route path="restaurant" element={<RestaurantPage limits={limits} />} />}
+          {role === 'owner' && <Route path="categories" element={<CategoriesPage limits={limits} />} />}
+          {role === 'owner' && <Route path="items" element={<ItemsPage limits={limits} />} />}
         </Routes>
       </div>
     </div>

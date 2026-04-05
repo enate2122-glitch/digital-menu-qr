@@ -12,12 +12,22 @@ export default function LightTheme({ data, activeCategory, setActiveCategory }: 
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: accent, padding: '28px 20px', textAlign: 'center' }}>
-        {restaurant.logo_url
-          ? <img src={restaurant.logo_url} alt="logo" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.5)', marginBottom: '10px' }} />
-          : <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🍽️</div>}
-        <h1 style={{ color: '#fff', fontSize: 'clamp(1.4rem, 5vw, 2rem)', fontWeight: 800, margin: '0 0 4px' }}>{restaurant.name}</h1>
-        {restaurant.address && <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem', margin: 0 }}>📍 {restaurant.address}</p>}
+      <div style={{ position: 'relative', minHeight: '200px', display: 'flex', alignItems: 'flex-end' }}>
+        {restaurant.cover_image_url
+          ? <img src={restaurant.cover_image_url} alt="cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <div style={{ position: 'absolute', inset: 0, background: accent }} />
+        }
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%)' }} />
+        <div style={{ position: 'relative', width: '100%', padding: '20px', textAlign: 'center' }}>
+          {restaurant.logo_url
+            ? <img src={restaurant.logo_url} alt="logo" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.6)', marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
+            : <div style={{ fontSize: '2.5rem', marginBottom: '6px' }}>🍽️</div>}
+          <h1 style={{ color: '#fff', fontSize: 'clamp(1.4rem, 5vw, 2rem)', fontWeight: 800, margin: '0 0 6px', textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{restaurant.name}</h1>
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            {restaurant.address && <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.8rem' }}>📍 {restaurant.address}</span>}
+            {restaurant.phone && <a href={`tel:${restaurant.phone}`} style={{ color: '#fff', fontSize: '0.8rem', textDecoration: 'none', fontWeight: 700, background: accent, padding: '2px 10px', borderRadius: '20px' }}>📞 {restaurant.phone}</a>}
+          </div>
+        </div>
       </div>
       {/* Tabs */}
       <div style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflowX: 'auto', padding: '0 16px', position: 'sticky', top: 0, zIndex: 10 }}>

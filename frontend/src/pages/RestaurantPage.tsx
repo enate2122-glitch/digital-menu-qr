@@ -1,5 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
+import DarkTheme from '../components/menus/DarkTheme';
+import LightTheme from '../components/menus/LightTheme';
+import ElegantTheme from '../components/menus/ElegantTheme';
+import BoldTheme from '../components/menus/BoldTheme';
+import type { MenuData } from '../components/menus/types';
+import type { PlanLimits } from './AdminLayout';
 
 interface Restaurant {
   id: string; name: string; address: string;
@@ -7,16 +14,107 @@ interface Restaurant {
   slug: string; unique_qr_id: string;
 }
 
-export default function RestaurantPage() {
+const THEMES = [
+  { id: 'dark',    label: 'Dark Fine Dining', desc: 'Gold on dark' },
+  { id: 'light',   label: 'Light & Clean',    desc: 'White, modern' },
+  { id: 'elegant', label: 'Elegant Classic',  desc: 'Cream, luxury' },
+  { id: 'bold',    label: 'Bold Street Food', desc: 'Vibrant, energetic' },
+];
+
+const SAMPLE_MENU: MenuData = {
+  restaurant: { name: 'Your Restaurant', logo_url: null, primary_color: null, address: '123 Main Street', menu_theme: 'dark' },
+  categories: [
+    {
+      id: 'cat1', name: 'Mains', display_order: 0,
+      items: [
+        { id: 'i1', name: 'Grilled Salmon', description: 'With lemon butter sauce', price: 18, image_url: null, is_available: true, display_order: 0 },
+        { id: 'i2', name: 'Caesar Salad', description: 'Romaine, croutons, parmesan', price: 12, image_url: null, is_available: true, display_order: 1 },
+        { id: 'i3', name: 'Beef Burger', description: 'Angus beef, cheddar, pickles', price: 15, image_url: null, is_available: false, display_order: 2 },
+      ],
+    },
+    { id: 'cat2', name: 'Drinks', display_order: 1, items: [
+      { id: 'i4', name: 'Fresh Juice', description: 'Orange or mango', price: 5, image_url: null, is_available: true, display_order: 0 },
+    ]},
+  ],
+};
+
+function ThemeEmulator({ themeId, primaryColor, coverImageUrl }: { themeId: string; primaryColor: string; coverImageUrl?: string }) {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const menuData: MenuData = {
+    ...SAMPLE_MENU,
+    restaurant: { ...SAMPLE_MENU.restaurant, primary_color: primaryColor, menu_theme: themeId, cover_image_url: coverImageUrl || null },
+  };
+
+  const ThemeComponent =
+    themeId === 'light' ? LightTheme :
+    themeId === 'elegant' ? ElegantTheme :
+    themeId === 'bold' ? BoldTheme :
+    DarkTheme;
+
+  // Phone frame: 390px wide content scaled to fit 220px display = scale 0.564
+  const PHONE_W = 390;
+  const PHONE_H = 700;
+  const DISPLAY_W = 220;
+  const scale = DISPLAY_W / PHONE_W;
+  const displayH = PHONE_H * scale;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* Phone shell */}
+      <div style={{
+        width: DISPLAY_W + 24,
+        height: displayH + 48,
+        background: '#1a1a2e',
+        borderRadius: '36px',
+        padding: '20px 12px',
+        boxShadow: '0 0 0 2px #333, 0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px #444',
+        position: 'relative',
+        flexShrink: 0,
+      }}>
+        {/* Notch */}
+        <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', width: '60px', height: '8px', background: '#111', borderRadius: '4px', zIndex: 10 }} />
+        {/* Screen */}
+        <div style={{
+          width: DISPLAY_W,
+          height: displayH,
+          borderRadius: '20px',
+          overflow: 'hidden',
+          background: '#000',
+          position: 'relative',
+        }}>
+          {/* Scaled content */}
+          <div style={{
+            width: PHONE_W,
+            height: PHONE_H,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+          }}>
+            <ThemeComponent data={menuData} activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+          </div>
+        </div>
+        {/* Home bar */}
+        <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', width: '60px', height: '4px', background: '#444', borderRadius: '2px' }} />
+      </div>
+    </div>
+  );
+}
+
+
+export default function RestaurantPage({ limits }: { limits: PlanLimits | null }) {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#c9a84c');
   const [logoUrl, setLogoUrl] = useState('');
   const [menuTheme, setMenuTheme] = useState('dark');
   const [uploading, setUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -24,6 +122,7 @@ export default function RestaurantPage() {
   const [qrDownloading, setQrDownloading] = useState(false);
   const [qrError, setQrError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchRestaurant() {
@@ -35,6 +134,8 @@ export default function RestaurantPage() {
           setRestaurant(r);
           setName(r.name ?? '');
           setAddress(r.address ?? '');
+          setPhone((r as { phone?: string }).phone ?? '');
+          setCoverImageUrl((r as { cover_image_url?: string }).cover_image_url ?? '');
           setPrimaryColor(r.primary_color ?? '#c9a84c');
           setLogoUrl(r.logo_url ?? '');
           setMenuTheme((r as { menu_theme?: string }).menu_theme ?? 'dark');
@@ -59,12 +160,26 @@ export default function RestaurantPage() {
     } finally { setUploading(false); }
   }
 
+  async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(''); setCoverUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await client.post<{ url: string }>('/images/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setCoverImageUrl(res.data.url);
+    } catch (err: unknown) {
+      setUploadError((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to upload cover image.');
+    } finally { setCoverUploading(false); }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaveError(''); setSaveSuccess(''); setSaving(true);
     try {
       if (restaurant) {
-        const res = await client.patch<Restaurant>(`/restaurants/${restaurant.id}`, { name, address, primary_color: primaryColor, logo_url: logoUrl, menu_theme: menuTheme });
+        const res = await client.patch<Restaurant>(`/restaurants/${restaurant.id}`, { name, address, phone, cover_image_url: coverImageUrl, primary_color: primaryColor, logo_url: logoUrl, menu_theme: menuTheme });
         setRestaurant(res.data);
         setSaveSuccess('Changes saved successfully.');
       } else {
@@ -141,6 +256,34 @@ export default function RestaurantPage() {
                 <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="123 Main Street, City" />
               </div>
               <div className="form-field">
+                <label>Phone Number</label>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" />
+              </div>
+              <div className="form-field">
+                <label>Cover Image</label>
+                <p style={{ color: 'var(--muted)', fontSize: '0.78rem', margin: '0 0 8px' }}>Shown as the menu header background.</p>
+                {limits && !limits.coverImage ? (
+                  <div style={{ padding: '10px 14px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.82rem', color: 'var(--muted)' }}>
+                    🔒 Cover image is available on Growing & Enterprise plans. <Link to="/pricing" style={{ color: 'var(--gold)' }}>Upgrade →</Link>
+                  </div>
+                ) : (
+                  <>
+                    {coverImageUrl && (
+                      <div style={{ marginBottom: '8px', borderRadius: '8px', overflow: 'hidden', height: '80px', border: '1px solid var(--border)', position: 'relative' }}>
+                        <img src={coverImageUrl} alt="cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button type="button" onClick={() => setCoverImageUrl('')}
+                          style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', color: '#fff', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                      </div>
+                    )}
+                    <button type="button" onClick={() => coverInputRef.current?.click()}
+                      style={{ width: '100%', padding: '10px', border: '1.5px dashed var(--border)', borderRadius: '10px', background: 'var(--bg3)', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+                      {coverUploading ? 'Uploading…' : coverImageUrl ? '🔄 Replace Cover Image' : '📷 Upload Cover Image'}
+                    </button>
+                    <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverChange} style={{ display: 'none' }} />
+                  </>
+                )}
+              </div>
+              <div className="form-field">
                 <label>Brand Color</label>
                 <p style={{ color: 'var(--muted)', fontSize: '0.78rem', margin: '0 0 8px' }}>Appears on your public menu header.</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
@@ -157,21 +300,34 @@ export default function RestaurantPage() {
 
               <div className="form-field">
                 <label>Menu Design Theme</label>
-                <p style={{ color: 'var(--muted)', fontSize: '0.78rem', margin: '0 0 10px' }}>Choose how your public menu looks to customers.</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {[
-                    { id: 'dark',    label: 'Dark Fine Dining', desc: 'Gold on dark, elegant', preview: ['#0d0d1a','#c9a84c','#13132a'] },
-                    { id: 'light',   label: 'Light & Clean',    desc: 'White, modern, minimal', preview: ['#fafafa','#e85d26','#fff'] },
-                    { id: 'elegant', label: 'Elegant Classic',  desc: 'Cream, serif, luxury', preview: ['#fdf8f0','#8b6914','#fff'] },
-                    { id: 'bold',    label: 'Bold Street Food', desc: 'Dark, vibrant, energetic', preview: ['#111','#ff3d00','#1a1a1a'] },
-                  ].map(t => (
+                <p style={{ color: 'var(--muted)', fontSize: '0.78rem', margin: '0 0 14px' }}>Choose how your public menu looks to customers.</p>
+
+                {/* Phone emulator preview */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <ThemeEmulator themeId={menuTheme} primaryColor={primaryColor} coverImageUrl={coverImageUrl} />
+                </div>
+
+                {/* Theme selector pills */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {THEMES.map(t => (
                     <button key={t.id} type="button" onClick={() => setMenuTheme(t.id)}
-                      style={{ padding: '12px', borderRadius: '10px', border: `2px solid ${menuTheme === t.id ? 'var(--gold)' : 'var(--border)'}`, background: menuTheme === t.id ? 'var(--gold-dim)' : 'var(--bg3)', cursor: 'pointer', textAlign: 'left' as const, transition: 'all 0.15s' }}>
-                      <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
-                        {t.preview.map((c, i) => <div key={i} style={{ width: '16px', height: '16px', borderRadius: '3px', background: c, border: '1px solid rgba(255,255,255,0.1)' }} />)}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        border: `2px solid ${menuTheme === t.id ? 'var(--gold)' : 'var(--border)'}`,
+                        background: menuTheme === t.id ? 'var(--gold-dim)' : 'var(--bg3)',
+                        cursor: 'pointer',
+                        textAlign: 'left' as const,
+                        transition: 'all 0.15s',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: menuTheme === t.id ? 'var(--gold)' : 'var(--text)' }}>{t.label}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '1px' }}>{t.desc}</div>
                       </div>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: menuTheme === t.id ? 'var(--gold)' : 'var(--text)' }}>{t.label}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '2px' }}>{t.desc}</div>
+                      {menuTheme === t.id && <span style={{ color: 'var(--gold)', fontSize: '1rem' }}>✓</span>}
                     </button>
                   ))}
                 </div>

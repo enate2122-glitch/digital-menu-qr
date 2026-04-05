@@ -12,17 +12,27 @@ export default function ElegantTheme({ data, activeCategory, setActiveCategory }
   return (
     <div style={{ minHeight: '100vh', background: '#fdf8f0', fontFamily: 'Georgia, serif', color: '#2c1810' }}>
       {/* Header */}
-      <div style={{ textAlign: 'center', padding: '40px 20px 28px', borderBottom: `2px solid ${accent}` }}>
-        {restaurant.logo_url
-          ? <img src={restaurant.logo_url} alt="logo" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${accent}`, marginBottom: '14px' }} />
-          : <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🍽️</div>}
-        <div style={{ fontSize: '0.7rem', letterSpacing: '0.3em', color: accent, marginBottom: '8px', fontFamily: 'system-ui', fontWeight: 600 }}>— WELCOME TO —</div>
-        <h1 style={{ fontSize: 'clamp(1.8rem, 6vw, 3rem)', fontWeight: 700, margin: '0 0 8px', color: '#2c1810', letterSpacing: '0.05em' }}>{restaurant.name}</h1>
-        {restaurant.address && <p style={{ color: '#9a7a5a', fontSize: '0.8rem', margin: '0 0 12px', fontFamily: 'system-ui' }}>📍 {restaurant.address}</p>}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-          <div style={{ height: '1px', width: '60px', background: accent }} />
-          <span style={{ color: accent, fontSize: '1rem' }}>✦</span>
-          <div style={{ height: '1px', width: '60px', background: accent }} />
+      <div style={{ position: 'relative', minHeight: '240px', display: 'flex', alignItems: 'flex-end' }}>
+        {restaurant.cover_image_url
+          ? <img src={restaurant.cover_image_url} alt="cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, #fdf8f0, ${accent}22)` }} />
+        }
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(253,248,240,0.2) 0%, rgba(253,248,240,0.92) 100%)' }} />
+        <div style={{ position: 'relative', width: '100%', textAlign: 'center', padding: '28px 20px' }}>
+          {restaurant.logo_url
+            ? <img src={restaurant.logo_url} alt="logo" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${accent}`, marginBottom: '12px', display: 'block', margin: '0 auto 12px' }} />
+            : <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🍽️</div>}
+          <div style={{ fontSize: '0.7rem', letterSpacing: '0.3em', color: accent, marginBottom: '6px', fontFamily: 'system-ui', fontWeight: 600 }}>— WELCOME TO —</div>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 6vw, 3rem)', fontWeight: 700, margin: '0 0 8px', color: '#2c1810', letterSpacing: '0.05em' }}>{restaurant.name}</h1>
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '12px', fontFamily: 'system-ui' }}>
+            {restaurant.address && <span style={{ color: '#9a7a5a', fontSize: '0.8rem' }}>📍 {restaurant.address}</span>}
+            {restaurant.phone && <a href={`tel:${restaurant.phone}`} style={{ color: accent, fontSize: '0.8rem', textDecoration: 'none', fontWeight: 600 }}>📞 {restaurant.phone}</a>}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <div style={{ height: '1px', width: '60px', background: accent }} />
+            <span style={{ color: accent, fontSize: '1rem' }}>✦</span>
+            <div style={{ height: '1px', width: '60px', background: accent }} />
+          </div>
         </div>
       </div>
       {/* Tabs */}

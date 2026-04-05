@@ -58,3 +58,11 @@ export async function rejectSubscription(subId: string, adminId: string, notes?:
   if (!res.rows[0]) throw Object.assign(new Error('Subscription not found.'), { statusCode: 404 });
   return res.rows[0];
 }
+
+export async function getActivePlan(userId: string): Promise<Plan | null> {
+  const res = await query<{ plan: Plan }>(
+    `SELECT plan FROM subscriptions WHERE user_id = $1 AND status = 'active' ORDER BY created_at DESC LIMIT 1`,
+    [userId]
+  );
+  return res.rows[0]?.plan ?? null;
+}

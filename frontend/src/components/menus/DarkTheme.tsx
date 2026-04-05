@@ -12,14 +12,27 @@ export default function DarkTheme({ data, activeCategory, setActiveCategory }: {
   return (
     <div style={{ minHeight: '100vh', background: '#0d0d1a', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ padding: '32px 20px 24px', textAlign: 'center', borderBottom: '1px solid #1e1e3a', background: `linear-gradient(180deg, ${accent}18 0%, transparent 100%)` }}>
-        {restaurant.logo_url
-          ? <img src={restaurant.logo_url} alt="logo" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${accent}`, marginBottom: '12px' }} />
-          : <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: accent, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', marginBottom: '12px' }}>🍽️</div>
+      <div style={{ position: 'relative', minHeight: '220px', display: 'flex', alignItems: 'flex-end' }}>
+        {/* Cover image */}
+        {restaurant.cover_image_url
+          ? <img src={restaurant.cover_image_url} alt="cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, #0d0d1a 0%, ${accent}33 100%)` }} />
         }
-        <h1 style={{ color: accent, fontSize: 'clamp(1.6rem, 6vw, 2.4rem)', fontWeight: 800, margin: '0 0 4px', fontFamily: 'Georgia, serif' }}>{restaurant.name}</h1>
-        {restaurant.address && <p style={{ color: '#666', fontSize: '0.8rem', margin: 0 }}>📍 {restaurant.address}</p>}
-        <div style={{ width: '40px', height: '2px', background: accent, margin: '12px auto 0', borderRadius: '2px' }} />
+        {/* Overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(13,13,26,0.3) 0%, rgba(13,13,26,0.85) 100%)' }} />
+        {/* Content */}
+        <div style={{ position: 'relative', width: '100%', padding: '24px 20px', textAlign: 'center' }}>
+          {restaurant.logo_url
+            ? <img src={restaurant.logo_url} alt="logo" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${accent}`, marginBottom: '10px', display: 'block', margin: '0 auto 10px' }} />
+            : <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: accent, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', marginBottom: '10px' }}>🍽️</div>
+          }
+          <h1 style={{ color: '#fff', fontSize: 'clamp(1.6rem, 6vw, 2.4rem)', fontWeight: 800, margin: '0 0 6px', fontFamily: 'Georgia, serif', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>{restaurant.name}</h1>
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '12px', marginTop: '6px' }}>
+            {restaurant.address && <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem' }}>📍 {restaurant.address}</span>}
+            {restaurant.phone && <a href={`tel:${restaurant.phone}`} style={{ color: accent, fontSize: '0.8rem', textDecoration: 'none', fontWeight: 600 }}>📞 {restaurant.phone}</a>}
+          </div>
+          <div style={{ width: '40px', height: '2px', background: accent, margin: '12px auto 0', borderRadius: '2px' }} />
+        </div>
       </div>
       {/* Tabs */}
       <div style={{ overflowX: 'auto', borderBottom: '1px solid #1e1e3a', padding: '0 16px' }}>

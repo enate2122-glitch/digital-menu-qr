@@ -3,13 +3,14 @@ import multer from 'multer';
 import { authenticate } from '../middleware/authenticate';
 import { requireRole } from '../middleware/requireRole';
 import { uploadImage, MAX_FILE_SIZE } from '../services/image.service';
+import { getActivePlan } from '../services/subscription.service';
+import { getLimits } from '../utils/planLimits';
 
 const router = Router();
 
-// Store files in memory so we can inspect the buffer
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_FILE_SIZE + 1 }, // allow slightly over so we can return 413 ourselves
+  limits: { fileSize: MAX_FILE_SIZE + 1 },
 });
 
 router.post(
@@ -18,6 +19,15 @@ router.post(
   requireRole('owner'),
   upload.single('image'),
   async (req: Request, res: Response) => {
+    // Check plan allows image uploads
+    const plan = await getActivePlan(req.user!.id);
+    if (!plan) {
+      return res.status(403).json({ error: { code: 'NO_SUBSCRIPTION', message: 'No active subscription.' } });
+    }
+    if (!getLimits(plan).imageUploads) {
+      return res.status(403).json({ error: { code: 'PLAN_LIMIT', message: `Image uploads are not available on the ${plan} plan. Upgrade to Growing or Enterprise.` } });
+    }
+
     if (!req.file) {
       return res.status(400).json({ error: { code: 'MISSING_FILE', message: 'No image file provided.' } });
     }

@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
+import type { PlanLimits } from './AdminLayout';
 
 interface Category { id: string; name: string; display_order: number; }
 interface MenuItem {
@@ -8,10 +10,11 @@ interface MenuItem {
   image_url: string | null; display_order: number; is_available: boolean;
 }
 
-export default function ItemsPage() {
+export default function ItemsPage({ limits }: { limits: PlanLimits | null }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [itemsLoading, setItemsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,6 +43,11 @@ export default function ItemsPage() {
     try {
       const res = await client.get<MenuItem[]>(`/categories/${categoryId}/items`);
       setItems(res.data);
+      // update total across all categories
+      const allRes = await Promise.all(
+        categories.map(c => client.get<MenuItem[]>(`/categories/${c.id}/items`))
+      );
+      setTotalItems(allRes.reduce((sum, r) => sum + r.data.length, 0));
     } catch { setError('Failed to load items.'); }
     finally { setItemsLoading(false); }
   }
@@ -146,6 +154,16 @@ export default function ItemsPage() {
     <div className="page-content">
       <h1 className="page-title">Menu Items</h1>
 
+      {/* Plan usage */}
+      {limits && limits.maxItems !== -1 && (
+        <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.82rem', color: 'var(--muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Menu items: <strong style={{ color: 'var(--text)' }}>{totalItems} / {limits.maxItems}</strong></span>
+          {totalItems >= limits.maxItems && (
+            <Link to="/pricing" style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.8rem' }}>Upgrade plan →</Link>
+          )}
+        </div>
+      )}
+
       {categories.length === 0 ? (
         <div className="card"><p style={{ color: '#6b7280' }}>No categories found. Please create a category first.</p></div>
       ) : (
@@ -159,6 +177,11 @@ export default function ItemsPage() {
 
           <div className="card" style={{ marginBottom: '20px' }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '14px' }}>Add Item</h2>
+            {limits && limits.maxItems !== -1 && totalItems >= limits.maxItems ? (
+              <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--muted)' }}>
+                🔒 Item limit reached for your plan. <Link to="/pricing" style={{ color: 'var(--gold)' }}>Upgrade to add more →</Link>
+              </div>
+            ) : (
             <form onSubmit={handleCreate}>
               <div className="form-row">
                 <div className="form-field" style={{ flex: 2, minWidth: '160px' }}>
@@ -180,8 +203,11 @@ export default function ItemsPage() {
               </div>
               <div className="form-row" style={{ alignItems: 'center' }}>
                 <div className="form-field">
-                  <label>Image</label>
-                  <input type="file" accept="image/jpeg,image/png,image/webp" ref={createFileRef} />
+                  <label>Image {limits && !limits.imageUploads && <span style={{ color: 'var(--muted)', fontSize: '0.72rem' }}>(Growing+ only)</span>}</label>
+                  {limits && !limits.imageUploads
+                    ? <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0 }}>🔒 <Link to="/pricing" style={{ color: 'var(--gold)' }}>Upgrade to Growing</Link> to upload images.</p>
+                    : <input type="file" accept="image/jpeg,image/png,image/webp" ref={createFileRef} />
+                  }
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', alignSelf: 'flex-end', paddingBottom: '2px' }}>
                   <input type="checkbox" checked={newAvailable} onChange={e => setNewAvailable(e.target.checked)} />
@@ -192,6 +218,7 @@ export default function ItemsPage() {
               {formError && <div className="alert-error" style={{ marginTop: '8px' }}>{formError}</div>}
               {formSuccess && <div className="alert-success" style={{ marginTop: '8px' }}>{formSuccess}</div>}
             </form>
+            )}
           </div>
 
           <div className="card">

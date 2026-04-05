@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
+import type { PlanLimits } from './AdminLayout';
 
 interface Category { id: string; name: string; display_order: number; }
 
-export default function CategoriesPage() {
+export default function CategoriesPage({ limits }: { limits: PlanLimits | null }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,8 +64,23 @@ export default function CategoriesPage() {
       <p style={{ color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.12em', marginBottom: '8px' }}>MENU MANAGEMENT</p>
       <h1 className="page-title" style={{ fontFamily: 'var(--font-ser)' }}>Categories</h1>
 
+      {/* Plan usage */}
+      {limits && limits.maxCategories !== -1 && (
+        <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.82rem', color: 'var(--muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Categories: <strong style={{ color: 'var(--text)' }}>{categories.length} / {limits.maxCategories}</strong></span>
+          {categories.length >= limits.maxCategories && (
+            <Link to="/pricing" style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.8rem' }}>Upgrade plan →</Link>
+          )}
+        </div>
+      )}
+
       <div className="card" style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '16px', color: 'var(--gold)' }}>➕ Add Category</h2>
+        {limits && limits.maxCategories !== -1 && categories.length >= limits.maxCategories ? (
+          <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--muted)' }}>
+            🔒 Category limit reached for your plan. <Link to="/pricing" style={{ color: 'var(--gold)' }}>Upgrade to add more →</Link>
+          </div>
+        ) : (
         <form onSubmit={handleCreate}>
           <div className="form-row">
             <div className="form-field" style={{ flex: 2, minWidth: '180px' }}>
@@ -79,6 +96,7 @@ export default function CategoriesPage() {
           {formError && <div className="alert-error" style={{ marginTop: '8px' }}>{formError}</div>}
           {formSuccess && <div className="alert-success" style={{ marginTop: '8px' }}>{formSuccess}</div>}
         </form>
+        )}
       </div>
 
       <div className="card">

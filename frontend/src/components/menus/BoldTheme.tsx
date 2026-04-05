@@ -12,13 +12,23 @@ export default function BoldTheme({ data, activeCategory, setActiveCategory }: {
   return (
     <div style={{ minHeight: '100vh', background: '#111', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: accent, padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {restaurant.logo_url
-          ? <img src={restaurant.logo_url} alt="logo" style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
-          : <div style={{ width: '56px', height: '56px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', flexShrink: 0 }}>🍔</div>}
-        <div>
-          <h1 style={{ color: '#fff', fontSize: 'clamp(1.4rem, 5vw, 2rem)', fontWeight: 900, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{restaurant.name}</h1>
-          {restaurant.address && <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', margin: 0 }}>📍 {restaurant.address}</p>}
+      <div style={{ position: 'relative', minHeight: '200px', display: 'flex', alignItems: 'flex-end' }}>
+        {restaurant.cover_image_url
+          ? <img src={restaurant.cover_image_url} alt="cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <div style={{ position: 'absolute', inset: 0, background: accent }} />
+        }
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%)' }} />
+        <div style={{ position: 'relative', width: '100%', padding: '20px', display: 'flex', alignItems: 'flex-end', gap: '16px' }}>
+          {restaurant.logo_url
+            ? <img src={restaurant.logo_url} alt="logo" style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
+            : <div style={{ width: '56px', height: '56px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', flexShrink: 0, border: `2px solid ${accent}` }}>🍔</div>}
+          <div style={{ flex: 1 }}>
+            <h1 style={{ color: '#fff', fontSize: 'clamp(1.4rem, 5vw, 2rem)', fontWeight: 900, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>{restaurant.name}</h1>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {restaurant.address && <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem' }}>📍 {restaurant.address}</span>}
+              {restaurant.phone && <a href={`tel:${restaurant.phone}`} style={{ color: '#fff', fontSize: '0.78rem', textDecoration: 'none', fontWeight: 800, background: accent, padding: '2px 10px', borderRadius: '4px' }}>📞 {restaurant.phone}</a>}
+            </div>
+          </div>
         </div>
       </div>
       {/* Tabs */}

@@ -53,6 +53,9 @@ const migrations: string[] = [
 
   `ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS menu_theme TEXT NOT NULL DEFAULT 'dark'`,
 
+  `ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS phone TEXT`,
+  `ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS cover_image_url TEXT`,
+
   `CREATE TABLE IF NOT EXISTS subscriptions (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
