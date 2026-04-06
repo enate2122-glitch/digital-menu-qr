@@ -17,6 +17,14 @@ const testimonials = [
 export default function HomePage() {
   return (
     <LandingLayout>
+      <style>{`
+        @media (max-width: 640px) {
+          .showcase-inner { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .showcase-imgs-wrap { height: 220px !important; position: relative !important; }
+          .showcase-img-sub { display: none !important; }
+          .showcase-img-main { width: 100% !important; height: 100% !important; }
+        }
+      `}</style>
 
       {/* ── Hero ── */}
       <section style={s.hero}>
@@ -42,7 +50,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Stats ── */}
-      <section style={s.stats}>
+      <section className="landing-stats" style={s.stats}>
         {[
           { n: '500+', l: 'Restaurants' },
           { n: '50K+', l: 'Menu Scans' },
@@ -57,7 +65,7 @@ export default function HomePage() {
       </section>
 
       {/* ── How it works ── */}
-      <section style={s.section}>
+      <section className="landing-section" style={s.section}>
         <div style={s.sectionInner}>
           <p style={s.eyebrow}>HOW IT WORKS</p>
           <h2 style={s.sectionTitle}>Live in <span style={{ color: 'var(--gold)' }}>Minutes</span></h2>
@@ -84,7 +92,7 @@ export default function HomePage() {
 
       {/* ── Feature showcase ── */}
       <section style={s.showcase}>
-        <div style={s.showcaseInner}>
+        <div className="showcase-inner" style={s.showcaseInner}>
           <div style={s.showcaseText}>
             <p style={s.eyebrow}>BEAUTIFUL MENUS</p>
             <h2 style={{ ...s.sectionTitle, textAlign: 'left' as const }}>
@@ -105,8 +113,10 @@ export default function HomePage() {
             </Link>
           </div>
           <div style={s.showcaseImgs}>
-            <div style={{ ...s.showcaseImg, ...s.showcaseImgMain, backgroundImage: `url(${food4})` }} />
-            <div style={{ ...s.showcaseImg, ...s.showcaseImgSub, backgroundImage: `url(${food2})` }} />
+            <div className="showcase-imgs-wrap" style={s.showcaseImgs}>
+              <div className="showcase-img-main" style={{ ...s.showcaseImg, ...s.showcaseImgMain, backgroundImage: `url(${food4})` }} />
+              <div className="showcase-img-sub" style={{ ...s.showcaseImg, ...s.showcaseImgSub, backgroundImage: `url(${food2})` }} />
+            </div>
           </div>
         </div>
       </section>
@@ -164,7 +174,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA ── */}
-      <section style={s.cta}>
+      <section className="landing-cta" style={s.cta}>
         <div style={{ ...s.ctaBg, backgroundImage: `url(${food1})` }} />
         <div style={s.ctaOverlay} />
         <div style={s.ctaContent}>
