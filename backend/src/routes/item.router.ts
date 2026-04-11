@@ -40,10 +40,11 @@ router.post('/', authenticate, requireRole('owner'), async (req: Request, res: R
 });
 
 router.patch('/:id', authenticate, requireRole('owner'), async (req: Request, res: Response) => {
-  const { name, description, price, image_url, is_available, display_order } = req.body;
+  const { category_id, name, description, price, image_url, is_available, display_order } = req.body;
 
   try {
     const item = await updateMenuItem(req.params.id, req.user!.id, {
+      category_id,
       name,
       description,
       price,

@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import client from '../api/client';
 import type { MenuData } from '../components/menus/types';
-import DarkTheme    from '../components/menus/DarkTheme';
-import LightTheme   from '../components/menus/LightTheme';
 import ElegantTheme from '../components/menus/ElegantTheme';
-import BoldTheme    from '../components/menus/BoldTheme';
 import OrganicTheme    from '../components/menus/OrganicTheme';
 import NeomorphicTheme from '../components/menus/NeomorphicTheme';
+import MinimalTheme    from '../components/menus/MinimalTheme';
+import VintageTheme    from '../components/menus/VintageTheme';
 
 export default function PublicMenuPage() {
   const { uniqueQrId } = useParams<{ uniqueQrId: string }>();
@@ -48,10 +47,9 @@ export default function PublicMenuPage() {
   const theme = data.restaurant.menu_theme ?? 'dark';
   const props = { data, activeCategory, setActiveCategory };
 
-  if (theme === 'light')       return <LightTheme      {...props} />;
-  if (theme === 'elegant')     return <ElegantTheme    {...props} />;
-  if (theme === 'bold')        return <BoldTheme       {...props} />;
   if (theme === 'organic')     return <OrganicTheme    {...props} />;
   if (theme === 'neomorphic')  return <NeomorphicTheme {...props} />;
-  return <DarkTheme {...props} />;
+  if (theme === 'minimal')     return <MinimalTheme    {...props} />;
+  if (theme === 'vintage')     return <VintageTheme    {...props} />;
+  return <ElegantTheme {...props} />;
 }

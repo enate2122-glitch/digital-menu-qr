@@ -29,6 +29,7 @@ export default function ItemsPage({ limits }: { limits: PlanLimits | null }) {
   const createFileRef = useRef<HTMLInputElement>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCategoryId, setEditCategoryId] = useState('');
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editPrice, setEditPrice] = useState('');
@@ -110,6 +111,7 @@ export default function ItemsPage({ limits }: { limits: PlanLimits | null }) {
 
   function startEdit(item: MenuItem) {
     setEditingId(item.id);
+    setEditCategoryId(item.category_id);
     setEditName(item.name);
     setEditDesc(item.description ?? '');
     setEditPrice(String(item.price));
@@ -129,13 +131,20 @@ export default function ItemsPage({ limits }: { limits: PlanLimits | null }) {
     }
     try {
       await client.patch(`/items/${id}`, {
+        category_id: editCategoryId,
         name: editName, description: editDesc,
         price: Number(editPrice), display_order: Number(editOrder),
         is_available: editAvailable,
         ...(imageUrl ? { image_url: imageUrl } : {}),
       });
       setEditingId(null);
-      await fetchItems(selectedCategoryId);
+      // If category changed, switch view to new category
+      if (editCategoryId !== selectedCategoryId) {
+        setSelectedCategoryId(editCategoryId);
+        await fetchItems(editCategoryId);
+      } else {
+        await fetchItems(selectedCategoryId);
+      }
     } catch (err: unknown) {
       setEditError((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update item.');
     }
@@ -239,7 +248,13 @@ export default function ItemsPage({ limits }: { limits: PlanLimits | null }) {
                       {editingId === item.id ? (
                         <>
                           <td>
-                            <input type="text" value={editName} onChange={e => setEditName(e.target.value)} style={{ marginBottom: '6px' }} />
+                            <div style={{ marginBottom: '6px' }}>
+                              <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Category</label>
+                              <select value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)} style={{ width: '100%', marginBottom: '6px' }}>
+                                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                              </select>
+                            </div>
+                            <input type="text" value={editName} onChange={e => setEditName(e.target.value)} style={{ marginBottom: '6px' }} placeholder="Name" />
                             <input type="text" value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Description" />
                             <input type="file" accept="image/jpeg,image/png,image/webp" ref={editFileRef} style={{ marginTop: '6px', fontSize: '0.8rem' }} />
                           </td>

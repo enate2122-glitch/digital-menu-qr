@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import client from '../api/client';
-import DarkTheme from '../components/menus/DarkTheme';
-import LightTheme from '../components/menus/LightTheme';
 import ElegantTheme from '../components/menus/ElegantTheme';
-import BoldTheme from '../components/menus/BoldTheme';
 import OrganicTheme from '../components/menus/OrganicTheme';
 import NeomorphicTheme from '../components/menus/NeomorphicTheme';
+import MinimalTheme from '../components/menus/MinimalTheme';
+import VintageTheme from '../components/menus/VintageTheme';
 import type { MenuData } from '../components/menus/types';
 import type { PlanLimits } from './AdminLayout';
 
@@ -17,12 +16,11 @@ interface Restaurant {
 }
 
 const THEMES = [
-  { id: 'dark',        label: 'Dark Fine Dining', desc: 'Gold on dark' },
-  { id: 'light',       label: 'Light & Clean',    desc: 'White, modern' },
   { id: 'elegant',     label: 'Elegant Classic',  desc: 'Cream, bottom nav' },
-  { id: 'bold',        label: 'Bold Street Food', desc: 'Vibrant, energetic' },
   { id: 'organic',     label: 'Hand-Drawn',       desc: 'Warm parchment' },
   { id: 'neomorphic',  label: 'Dark Neomorphic',  desc: 'Charcoal & teal' },
+  { id: 'minimal',     label: 'Clean Minimal',    desc: 'White, side drawer' },
+  { id: 'vintage',     label: 'Vintage Paper',    desc: 'Sepia, aged look' },
 ];
 
 const SAMPLE_MENU: MenuData = {
@@ -50,12 +48,11 @@ function ThemeEmulator({ themeId, primaryColor, coverImageUrl }: { themeId: stri
   };
 
   const ThemeComponent =
-    themeId === 'light' ? LightTheme :
-    themeId === 'elegant' ? ElegantTheme :
-    themeId === 'bold' ? BoldTheme :
     themeId === 'organic' ? OrganicTheme :
     themeId === 'neomorphic' ? NeomorphicTheme :
-    DarkTheme;
+    themeId === 'minimal' ? MinimalTheme :
+    themeId === 'vintage' ? VintageTheme :
+    ElegantTheme;
 
   // Phone frame: 390px wide content scaled to fit 220px display = scale 0.564
   const PHONE_W = 390;
@@ -118,7 +115,7 @@ export default function RestaurantPage({ limits }: { limits: PlanLimits | null }
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#c9a84c');
   const [logoUrl, setLogoUrl] = useState('');
-  const [menuTheme, setMenuTheme] = useState('dark');
+  const [menuTheme, setMenuTheme] = useState('elegant');
   const [uploading, setUploading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -314,7 +311,7 @@ export default function RestaurantPage({ limits }: { limits: PlanLimits | null }
                 </div>
 
                 {/* Theme selector pills */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                   {THEMES.map(t => (
                     <button key={t.id} type="button" onClick={() => setMenuTheme(t.id)}
                       style={{

@@ -124,6 +124,7 @@ export async function updateMenuItem(
   itemId: string,
   ownerId: string,
   data: {
+    category_id?: string;
     name?: string;
     description?: string;
     price?: number;
@@ -140,13 +141,19 @@ export async function updateMenuItem(
 
   const current = await verifyItemOwnership(itemId, ownerId);
 
+  // If moving to a different category, verify ownership of the target category
+  if (data.category_id && data.category_id !== current.category_id) {
+    await verifyCategoryOwnership(data.category_id, ownerId);
+  }
+
   const result = await query<MenuItemRecord>(
     `UPDATE menu_items
-     SET name = $1, description = $2, price = $3, image_url = $4,
-         is_available = $5, display_order = $6
-     WHERE id = $7
+     SET category_id = $1, name = $2, description = $3, price = $4, image_url = $5,
+         is_available = $6, display_order = $7
+     WHERE id = $8
      RETURNING id, category_id, name, description, price, image_url, is_available, display_order, created_at`,
     [
+      data.category_id ?? current.category_id,
       data.name ?? current.name,
       data.description !== undefined ? data.description : current.description,
       data.price !== undefined ? data.price : current.price,
