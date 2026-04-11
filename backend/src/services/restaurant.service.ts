@@ -28,11 +28,12 @@ export interface CreateRestaurantData {
   cover_image_url?: string;
 }
 
+const RETURNING = 'id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, phone, cover_image_url, created_at';
+
 export async function createRestaurant(
   ownerId: string,
   data: CreateRestaurantData
 ): Promise<RestaurantRecord> {
-  // Enforce subscription + restaurant limit
   const plan = await getActivePlan(ownerId);
   if (!plan) {
     const err: any = new Error('No active subscription. Please subscribe to a plan.');
@@ -49,58 +50,39 @@ export async function createRestaurant(
     }
   }
 
-  const slugBase = data.name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+  const slugBase = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const slug = slugBase + '-' + uuidv4().slice(0, 8);
   const unique_qr_id = uuidv4();
 
   const result = await query<RestaurantRecord>(
-    'INSERT INTO restaurants (owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme) ' +
-    'VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ' +
-    'RETURNING id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, phone, cover_image_url, created_at',
+    `INSERT INTO restaurants (owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING ${RETURNING}`,
     [ownerId, data.name, data.address ?? null, data.logo_url ?? null, data.primary_color ?? null, slug, unique_qr_id, data.menu_theme ?? 'dark']
   );
-
   return result.rows[0];
 }
 
 export async function listRestaurants(ownerId: string): Promise<RestaurantRecord[]> {
   const result = await query<RestaurantRecord>(
-    'SELECT id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, menu_theme, phone, cover_image_url, created_at ' +
-    'FROM restaurants WHERE owner_id = $1 ORDER BY created_at ASC',
+    `SELECT ${RETURNING} FROM restaurants WHERE owner_id = $1 ORDER BY created_at ASC`,
     [ownerId]
   );
   return result.rows;
 }
 
-export async function getRestaurant(
-  restaurantId: string,
-  ownerId: string
-): Promise<RestaurantRecord> {
+export async function getRestaurant(restaurantId: string, ownerId: string): Promise<RestaurantRecord> {
   const result = await query<RestaurantRecord>(
-    'SELECT id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, created_at ' +
-    'FROM restaurants WHERE id = $1',
+    `SELECT ${RETURNING} FROM restaurants WHERE id = $1`,
     [restaurantId]
   );
-
   if (result.rows.length === 0) {
-    const err: any = new Error('Restaurant not found.');
-    err.status = 404;
-    err.code = 'NOT_FOUND';
-    throw err;
+    const err: any = new Error('Restaurant not found.'); err.status = 404; err.code = 'NOT_FOUND'; throw err;
   }
-
-  const restaurant = result.rows[0];
-  if (restaurant.owner_id !== ownerId) {
-    const err: any = new Error('Access forbidden.');
-    err.status = 403;
-    err.code = 'FORBIDDEN';
-    throw err;
+  if (result.rows[0].owner_id !== ownerId) {
+    const err: any = new Error('Access forbidden.'); err.status = 403; err.code = 'FORBIDDEN'; throw err;
   }
-
-  return restaurant;
+  return result.rows[0];
 }
 
 export async function updateRestaurant(
@@ -108,51 +90,41 @@ export async function updateRestaurant(
   ownerId: string,
   data: Partial<CreateRestaurantData>
 ): Promise<RestaurantRecord> {
-  const existing = await query<RestaurantRecord>(
+  const existing = await query<{ id: string; owner_id: string }>(
     'SELECT id, owner_id FROM restaurants WHERE id = $1',
     [restaurantId]
   );
-
   if (existing.rows.length === 0) {
-    const err: any = new Error('Restaurant not found.');
-    err.status = 404;
-    err.code = 'NOT_FOUND';
-    throw err;
+    const err: any = new Error('Restaurant not found.'); err.status = 404; err.code = 'NOT_FOUND'; throw err;
   }
-
   if (existing.rows[0].owner_id !== ownerId) {
-    const err: any = new Error('Access forbidden.');
-    err.status = 403;
-    err.code = 'FORBIDDEN';
-    throw err;
+    const err: any = new Error('Access forbidden.'); err.status = 403; err.code = 'FORBIDDEN'; throw err;
   }
 
-  const allowedFields: Array<keyof CreateRestaurantData> = ['name', 'address', 'logo_url', 'primary_color', 'menu_theme', 'phone', 'cover_image_url'];
+  const allowedFields: Array<keyof CreateRestaurantData> = [
+    'name', 'address', 'logo_url', 'primary_color', 'menu_theme', 'phone', 'cover_image_url',
+  ];
   const setClauses: string[] = [];
   const values: unknown[] = [];
 
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
       values.push(data[field]);
-      setClauses.push(field + ' = $' + String(values.length));
+      setClauses.push(`${field} = $${values.length}`);
     }
   }
 
   if (setClauses.length === 0) {
     const current = await query<RestaurantRecord>(
-      'SELECT id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, created_at ' +
-      'FROM restaurants WHERE id = $1',
-      [restaurantId]
+      `SELECT ${RETURNING} FROM restaurants WHERE id = $1`, [restaurantId]
     );
     return current.rows[0];
   }
 
   values.push(restaurantId);
-  const sql =
-    'UPDATE restaurants SET ' + setClauses.join(', ') +
-    ' WHERE id = $' + String(values.length) +
-    ' RETURNING id, owner_id, name, address, logo_url, primary_color, slug, unique_qr_id, created_at';
-
-  const result = await query<RestaurantRecord>(sql, values);
+  const result = await query<RestaurantRecord>(
+    `UPDATE restaurants SET ${setClauses.join(', ')} WHERE id = $${values.length} RETURNING ${RETURNING}`,
+    values
+  );
   return result.rows[0];
 }
