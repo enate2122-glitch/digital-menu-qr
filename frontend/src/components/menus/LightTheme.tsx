@@ -1,6 +1,12 @@
 // Theme: Light Clean (white background, colorful accents)
 import type { MenuData } from './types';
 
+function optimizeImage(url: string | null, width = 400): string | null {
+  if (!url) return null;
+  if (url.includes('cloudinary.com')) return url.replace(/\/upload\//, `/upload/w_${width},q_auto,f_auto/`);
+  return url;
+}
+
 export default function LightTheme({ data, activeCategory, setActiveCategory }: {
   data: MenuData; activeCategory: string; setActiveCategory: (id: string) => void;
 }) {
@@ -14,13 +20,13 @@ export default function LightTheme({ data, activeCategory, setActiveCategory }: 
       {/* Header */}
       <div style={{ position: 'relative', minHeight: '200px', display: 'flex', alignItems: 'flex-end' }}>
         {restaurant.cover_image_url
-          ? <img src={restaurant.cover_image_url} alt="cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          ? <img src={optimizeImage(restaurant.cover_image_url, 800)!} alt="cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           : <div style={{ position: 'absolute', inset: 0, background: accent }} />
         }
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%)' }} />
         <div style={{ position: 'relative', width: '100%', padding: '20px', textAlign: 'center' }}>
           {restaurant.logo_url
-            ? <img src={restaurant.logo_url} alt="logo" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.6)', marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
+            ? <img src={optimizeImage(restaurant.logo_url, 128)!} alt="logo" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.6)', marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
             : <div style={{ fontSize: '2.5rem', marginBottom: '6px' }}>🍽️</div>}
           <h1 style={{ color: '#fff', fontSize: 'clamp(1.4rem, 5vw, 2rem)', fontWeight: 800, margin: '0 0 6px', textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{restaurant.name}</h1>
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -44,7 +50,7 @@ export default function LightTheme({ data, activeCategory, setActiveCategory }: 
       <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {activeItems.map(item => (
           <div key={item.id} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 1px 6px rgba(0,0,0,0.07)', display: 'flex', overflow: 'hidden', opacity: item.is_available ? 1 : 0.55 }}>
-            {item.image_url && <img src={item.image_url} alt={item.name} style={{ width: '100px', height: '100px', objectFit: 'cover', flexShrink: 0 }} />}
+            {item.image_url && <img src={optimizeImage(item.image_url, 200)!} alt={item.name} style={{ width: '100px', height: '100px', objectFit: 'cover', flexShrink: 0 }} />}
             <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                 <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#1a1a1a' }}>{item.name}</h3>
