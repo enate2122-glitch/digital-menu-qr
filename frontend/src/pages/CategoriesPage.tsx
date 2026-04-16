@@ -5,9 +5,8 @@ import type { PlanLimits } from './AdminLayout';
 
 interface Category { id: string; name: string; display_order: number; }
 
-export default function CategoriesPage({ limits }: { limits: PlanLimits | null }) {
+export default function CategoriesPage({ limits, restaurantId }: { limits: PlanLimits | null; restaurantId: string | null }) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newName, setNewName] = useState('');
@@ -25,18 +24,10 @@ export default function CategoriesPage({ limits }: { limits: PlanLimits | null }
   }
 
   useEffect(() => {
-    async function init() {
-      try {
-        setLoading(true);
-        const res = await client.get<{ id: string }[]>('/restaurants');
-        const restId = res.data[0]?.id;
-        if (!restId) { setError('No restaurant found. Please create a restaurant first.'); return; }
-        setRestaurantId(restId);
-        await fetchCategories(restId);
-      } catch { setError('Failed to load restaurant.'); } finally { setLoading(false); }
-    }
-    init();
-  }, []);
+    if (!restaurantId) return;
+    setLoading(true);
+    fetchCategories(restaurantId).finally(() => setLoading(false));
+  }, [restaurantId]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault(); setFormError(''); setFormSuccess('');

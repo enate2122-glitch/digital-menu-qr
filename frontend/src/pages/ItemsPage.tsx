@@ -10,7 +10,7 @@ interface MenuItem {
   image_url: string | null; display_order: number; is_available: boolean;
 }
 
-export default function ItemsPage({ limits }: { limits: PlanLimits | null }) {
+export default function ItemsPage({ limits, restaurantId }: { limits: PlanLimits | null; restaurantId: string | null }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -54,24 +54,24 @@ export default function ItemsPage({ limits }: { limits: PlanLimits | null }) {
   }
 
   useEffect(() => {
+    if (!restaurantId) return;
     async function init() {
       try {
         setLoading(true);
-        const res = await client.get<{ id: string }[]>('/restaurants');
-        const restId = res.data[0]?.id;
-        if (!restId) { setError('No restaurant found.'); return; }
-        const catRes = await client.get<Category[]>(`/restaurants/${restId}/categories`);
+        const catRes = await client.get<Category[]>(`/restaurants/${restaurantId}/categories`);
         const sorted = [...catRes.data].sort((a, b) => a.display_order - b.display_order);
         setCategories(sorted);
         if (sorted.length > 0) {
           setSelectedCategoryId(sorted[0].id);
           await fetchItems(sorted[0].id);
+        } else {
+          setItems([]); setTotalItems(0);
         }
       } catch { setError('Failed to load data.'); }
       finally { setLoading(false); }
     }
     init();
-  }, []);
+  }, [restaurantId]);
 
   async function uploadImage(file: File): Promise<string> {
     const formData = new FormData();

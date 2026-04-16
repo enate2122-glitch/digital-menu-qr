@@ -105,7 +105,7 @@ function ThemeEmulator({ themeId, primaryColor, coverImageUrl }: { themeId: stri
 }
 
 
-export default function RestaurantPage({ limits }: { limits: PlanLimits | null }) {
+export default function RestaurantPage({ limits, restaurantId }: { limits: PlanLimits | null; restaurantId: string | null }) {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -129,25 +129,24 @@ export default function RestaurantPage({ limits }: { limits: PlanLimits | null }
 
   useEffect(() => {
     async function fetchRestaurant() {
+      if (!restaurantId) return;
       try {
         setLoading(true);
-        const res = await client.get<Restaurant[]>('/restaurants');
-        const r = res.data[0];
-        if (r) {
-          setRestaurant(r);
-          setName(r.name ?? '');
-          setAddress(r.address ?? '');
-          setPhone((r as { phone?: string }).phone ?? '');
-          setCoverImageUrl((r as { cover_image_url?: string }).cover_image_url ?? '');
-          setPrimaryColor(r.primary_color ?? '#c9a84c');
-          setLogoUrl(r.logo_url ?? '');
-          setMenuTheme((r as { menu_theme?: string }).menu_theme ?? 'dark');
-        }
+        const res = await client.get<Restaurant>(`/restaurants/${restaurantId}`);
+        const r = res.data;
+        setRestaurant(r);
+        setName(r.name ?? '');
+        setAddress(r.address ?? '');
+        setPhone((r as { phone?: string }).phone ?? '');
+        setCoverImageUrl((r as { cover_image_url?: string }).cover_image_url ?? '');
+        setPrimaryColor(r.primary_color ?? '#c9a84c');
+        setLogoUrl(r.logo_url ?? '');
+        setMenuTheme((r as { menu_theme?: string }).menu_theme ?? 'elegant');
       } catch { setError('Failed to load restaurant profile.'); }
       finally { setLoading(false); }
     }
     fetchRestaurant();
-  }, []);
+  }, [restaurantId]);
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

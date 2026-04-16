@@ -22,6 +22,11 @@ export interface SubInfo {
   status: string;
 }
 
+interface RestaurantBasic {
+  id: string;
+  name: string;
+}
+
 const PLAN_COLORS: Record<string, string> = {
   professional: '#2563eb',
   growing: '#16a34a',
@@ -46,11 +51,19 @@ export default function AdminLayout() {
   const [subInfo, setSubInfo] = useState<SubInfo | null>(null);
   const [limits, setLimits] = useState<PlanLimits | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [restaurants, setRestaurants] = useState<RestaurantBasic[]>([]);
+  const [activeRestaurantId, setActiveRestaurantId] = useState<string | null>(null);
 
   useEffect(() => {
     if (role !== 'owner') return;
     client.get<{ subscription: SubInfo | null; limits: PlanLimits | null }>('/subscriptions/me/limits')
       .then(res => { setSubInfo(res.data.subscription); setLimits(res.data.limits); })
+      .catch(() => {});
+    client.get<RestaurantBasic[]>('/restaurants')
+      .then(res => {
+        setRestaurants(res.data);
+        if (res.data.length > 0) setActiveRestaurantId(res.data[0].id);
+      })
       .catch(() => {});
   }, [role]);
 
@@ -105,8 +118,22 @@ export default function AdminLayout() {
           )}
         </div>
       )}
+      {/* Restaurant switcher (owner with multiple restaurants) */}
+      {role === 'owner' && restaurants.length > 1 && (
+        <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: '6px' }}>RESTAURANT</div>
+          <select
+            value={activeRestaurantId ?? ''}
+            onChange={e => setActiveRestaurantId(e.target.value)}
+            style={{ width: '100%', fontSize: '0.82rem', padding: '6px 10px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer' }}
+          >
+            {restaurants.map(r => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      {/* Nav links */}
       <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', padding: '6px 10px 4px' }}>
           NAVIGATION
@@ -230,9 +257,9 @@ export default function AdminLayout() {
           } />
           {role === 'super_admin' && <Route path="users" element={<UsersPage />} />}
           {role === 'super_admin' && <Route path="subscriptions" element={<SubscriptionsPage />} />}
-          {role === 'owner' && <Route path="restaurant" element={<RestaurantPage limits={limits} />} />}
-          {role === 'owner' && <Route path="categories" element={<CategoriesPage limits={limits} />} />}
-          {role === 'owner' && <Route path="items" element={<ItemsPage limits={limits} />} />}
+          {role === 'owner' && <Route path="restaurant" element={<RestaurantPage limits={limits} restaurantId={activeRestaurantId} />} />}
+          {role === 'owner' && <Route path="categories" element={<CategoriesPage limits={limits} restaurantId={activeRestaurantId} />} />}
+          {role === 'owner' && <Route path="items" element={<ItemsPage limits={limits} restaurantId={activeRestaurantId} />} />}
         </Routes>
       </div>
     </div>
