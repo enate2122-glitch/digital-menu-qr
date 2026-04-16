@@ -197,11 +197,12 @@ export default function RestaurantPage({ limits, restaurantId }: { limits: PlanL
   async function handleDownloadQr() {
     setQrError(''); setQrDownloading(true);
     try {
-      const res = await client.get('/restaurant/qr', { responseType: 'blob' });
-      const url = URL.createObjectURL(res.data);
+      const url = restaurant ? `/restaurant/qr?restaurantId=${restaurant.id}` : '/restaurant/qr';
+      const res = await client.get(url, { responseType: 'blob' });
+      const blobUrl = URL.createObjectURL(res.data);
       const a = document.createElement('a');
-      a.href = url; a.download = 'qr-code.png'; a.click();
-      URL.revokeObjectURL(url);
+      a.href = blobUrl; a.download = `${name || 'menu'}-qr.svg`; a.click();
+      URL.revokeObjectURL(blobUrl);
     } catch { setQrError('Failed to download QR code.'); }
     finally { setQrDownloading(false); }
   }
@@ -354,17 +355,46 @@ export default function RestaurantPage({ limits, restaurantId }: { limits: PlanL
               <p style={{ color: 'var(--muted)', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: '16px' }}>
                 Place your QR code on tables so customers can instantly view your digital menu.
               </p>
-              {/* QR illustration */}
-              <div style={{ background: 'var(--bg3)', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 16px)', gap: '2px' }}>
-                  {Array.from({ length: 49 }).map((_, i) => {
-                    const corners = [0,1,2,3,4,5,6,7,13,14,20,21,27,28,34,35,41,42,43,44,45,46,47,48];
-                    const inner = [8,9,10,15,16,17,22,23,24];
-                    const isCorner = corners.includes(i);
-                    const isInner = inner.includes(i);
-                    return <div key={i} style={{ width: '16px', height: '16px', borderRadius: '2px', background: isCorner ? 'var(--gold)' : isInner ? 'var(--gold)' : Math.random() > 0.5 ? 'var(--border)' : 'transparent' }} />;
-                  })}
-                </div>
+              {/* QR preview */}
+              <div style={{ background: 'var(--bg3)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <svg width="180" height="200" viewBox="0 0 400 440" xmlns="http://www.w3.org/2000/svg" style={{ borderRadius: '8px' }}>
+                  {/* White background */}
+                  <rect width="400" height="440" fill="white" rx="12" />
+                  {/* QR corner squares */}
+                  <rect x="30" y="30" width="100" height="100" rx="8" fill="#0d0d1a" />
+                  <rect x="42" y="42" width="76" height="76" rx="4" fill="white" />
+                  <rect x="54" y="54" width="52" height="52" rx="2" fill="#0d0d1a" />
+                  <rect x="270" y="30" width="100" height="100" rx="8" fill="#0d0d1a" />
+                  <rect x="282" y="42" width="76" height="76" rx="4" fill="white" />
+                  <rect x="294" y="54" width="52" height="52" rx="2" fill="#0d0d1a" />
+                  <rect x="30" y="270" width="100" height="100" rx="8" fill="#0d0d1a" />
+                  <rect x="42" y="282" width="76" height="76" rx="4" fill="white" />
+                  <rect x="54" y="294" width="52" height="52" rx="2" fill="#0d0d1a" />
+                  {/* Data dots pattern */}
+                  {[150,165,180,195,210,225,240].map(x =>
+                    [150,165,180,195,210,225,240].map(y =>
+                      (x + y) % 30 === 0 ? <rect key={`${x}-${y}`} x={x} y={y} width="10" height="10" fill="#0d0d1a" /> : null
+                    )
+                  )}
+                  {[150,180,210,240].map(x => [30,60,90,270,300,330].map(y =>
+                    <rect key={`h${x}-${y}`} x={x} y={y} width="10" height="10" fill="#0d0d1a" />
+                  ))}
+                  {[30,60,90,270,300,330].map(x => [150,180,210,240].map(y =>
+                    <rect key={`v${x}-${y}`} x={x} y={y} width="10" height="10" fill="#0d0d1a" />
+                  ))}
+                  {/* Center logo circle */}
+                  <circle cx="200" cy="200" r="32" fill="white" />
+                  <circle cx="200" cy="200" r="32" fill="none" stroke="#c9a84c" strokeWidth="2.5" />
+                  <text x="200" y="208" fontSize="28" textAnchor="middle" dominantBaseline="middle">🍽️</text>
+                  {/* Bottom label */}
+                  <rect x="0" y="390" width="400" height="50" rx="0" fill="#0d0d1a" />
+                  <rect x="0" y="390" width="400" height="50" rx="0" fill="#0d0d1a" />
+                  <rect x="0" y="428" width="400" height="12" rx="0" fill="#0d0d1a" />
+                  <text x="200" y="418" fontFamily="Georgia, serif" fontSize="18" fontWeight="bold" fill="#c9a84c" textAnchor="middle" dominantBaseline="middle" letterSpacing="1">
+                    {(name || 'Your Restaurant').length > 22 ? (name || 'Your Restaurant').slice(0, 22) + '…' : (name || 'Your Restaurant')}
+                  </text>
+                </svg>
+                <p style={{ color: 'var(--muted)', fontSize: '0.72rem', textAlign: 'center', margin: 0 }}>Preview — download for the real QR code</p>
               </div>
               <button onClick={handleDownloadQr} disabled={qrDownloading} style={s.btnGold}>
                 {qrDownloading ? 'Generating...' : '⬇ Download QR Code PNG'}
